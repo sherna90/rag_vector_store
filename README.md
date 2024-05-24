@@ -9,3 +9,4 @@ Funciona de la siguiente manera:
 3. Generación: Finalmente, utiliza estos fragmentos como guía para generar una respuesta completa y coherente a la consulta del usuario.
 
 
+En este tutorial se crean embeddings a partir de un conjunto de [documentos](https://ucmcl-my.sharepoint.com/:u:/g/personal/shernandez_ucm_cl/EWleJaPYuGtKkUiWqyypcNsBkNmGmI75-TSjcCIYmBxbOQ?e=xgXgwN). Se comparan tecnicas basadas en la estrategia divide y vencerás para realizar búsquedas semánticas.
