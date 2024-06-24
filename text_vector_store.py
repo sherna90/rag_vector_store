@@ -1,7 +1,7 @@
 import ollama
 import scipy.spatial.distance as dst
 
-def create_vector_store(file_name,model_name):
+def create_vector_store(file_name,model_name,sep='\n'):
     documents=list()
     vector_store=dict()
     file=open(file_name,'r')

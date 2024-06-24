@@ -1,36 +1,28 @@
-from text_vector_store import *
-import PyPDF2
-import ollama
+from langchain_community.llms import Ollama
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.embeddings import OllamaEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains import RetrievalQA
 
-def create_pdf_vector_store(file_name,model_name,batch_size=5):
-    pdffile=open(file_name,'rb')
-    pdfReader=PyPDF2.PdfReader(pdffile)
+def create_pdf_vector_store(file_name,model_name,chunk_size=500,chunk_overlap=20):
+    oembed = OllamaEmbeddings(base_url="http://localhost:11434", model=model_name)
+    loader = PyPDFLoader(file_name)
+    data=loader.load()
+    text_splitter=RecursiveCharacterTextSplitter(chunk_size=chunk_size, 
+                                                 chunk_overlap=chunk_overlap)
+    all_splits = text_splitter.split_documents(data)
+    vectorstore = Chroma.from_documents(documents=all_splits, embedding=oembed)
+    return vectorstore
 
-    document=list()
-    for page in pdfReader.pages:
-        for chunk in page.extract_text().split('\n'):
-            if chunk!='\n':
-                document.append(chunk)
-    store=dict()
-    re_index=list()    
-    document.append(chunk)
-    store=dict()
-    re_index=list()
-    for i in range(0,len(document)-1,batch_size):
-        chunk=' '.join(document[i:(i+batch_size)])
-        re_index.append(chunk)
-        vector=ollama.embeddings(model=model_name,prompt=chunk)
-        store.update({i:vector['embedding']})
-    return store,re_index
 
 if __name__ == "__main__":
-    model_name='all-minilm'
-    vector_store,document=create_pdf_vector_store('data/transformer_time_series.pdf',model_name)
-    print(len(vector_store))
-    while True:
-        query = input('Enter your query: ')
-        if query=='exit':
-            break 
-        else:
-            response=query_engine(vector_store,document,model_name,query)
-            print(response)
+    embedding_model_name='nomic-embed-text'
+    model_name='llama3'
+    file_name='data/tuning_sgmcmc.pdf'
+    ollama = Ollama(base_url='http://localhost:11434',model=model_name)
+    vector_store=create_pdf_vector_store(file_name,embedding_model_name)
+    qachain=RetrievalQA.from_chain_type(ollama, retriever=vector_store.as_retriever())
+    question='describe the methodology of the paper'
+    res = qachain.invoke({"query": question})
+    print(res['result'])  
